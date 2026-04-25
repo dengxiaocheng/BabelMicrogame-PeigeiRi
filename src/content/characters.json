@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "game": "peigei-ri",
+  "characters": [
+    {
+      "id": "old_chen",
+      "name": "老陈",
+      "role": "elder",
+      "age": 68,
+      "hunger_base": 3,
+      "relationship_base": 5,
+      "risk_factor": 1,
+      "is_key_character": true,
+      "description": "村里最年长的人，知道很多关于巴别塔的旧事。他的记忆是集体的记忆。",
+      "dialogue": {
+        "hungry": "我不要紧……让孩子们先吃。",
+        "fed": "这口粮来得不容易，我记在心里。",
+        "denied": "（沉默地看你一眼，没有说话。）",
+        "critical": "老骨头撑不了几天了……你替我照顾好其他人。"
+      },
+      "traits": ["stoic", "respected", "frail"]
+    },
+    {
+      "id": "xiao_mei",
+      "name": "小梅",
+      "role": "child",
+      "age": 8,
+      "hunger_base": 5,
+      "relationship_base": 7,
+      "risk_factor": 3,
+      "is_key_character": true,
+      "description": "老陈的孙女，总是跟在爷爷身后。她饿的时候会哭，吃饱了会笑。",
+      "dialogue": {
+        "hungry": "爷爷，我肚子咕咕叫……",
+        "fed": "谢谢哥哥/姐姐！我吃饱啦！",
+        "denied": "（眼眶红了，咬着嘴唇不说话。）",
+        "critical": "爷爷……我头好晕……"
+      },
+      "traits": ["innocent", "vulnerable", "beloved"]
+    },
+    {
+      "id": "shi_fu",
+      "name": "石匠老赵",
+      "role": "worker",
+      "age": 42,
+      "hunger_base": 4,
+      "relationship_base": 4,
+      "risk_factor": 2,
+      "is_key_character": false,
+      "description": "巴别塔的建造者之一。双手布满老茧，干最重的活，吃最多的饭。",
+      "dialogue": {
+        "hungry": "今天搬了三百块砖，你说我能不能吃？",
+        "fed": "有劲了。明天继续。",
+        "denied": "行。你记着，塔不会自己长高。",
+        "critical": "手在抖……砖可能搬不动了。"
+      },
+      "traits": ["strong", "pragmatic", "essential"]
+    },
+    {
+      "id": "lin_sao",
+      "name": "林嫂",
+      "role": "cook",
+      "age": 35,
+      "hunger_base": 3,
+      "relationship_base": 6,
+      "risk_factor": 1,
+      "is_key_character": false,
+      "description": "负责分发食物的女人。她知道每个人的碗有多大，也知道谁偷偷多盛了。",
+      "dialogue": {
+        "hungry": "锅里就剩这些了，我都数过。",
+        "fed": "分我的那份给别人吧，我能扛。",
+        "denied": "（低头搅锅，不看你。）",
+        "critical": "我连站都站不稳了，谁来给大家分饭？"
+      },
+      "traits": ["observant", "selfless", "gossipy"]
+    },
+    {
+      "id": "guard_wang",
+      "name": "守卫王虎",
+      "role": "soldier",
+      "age": 28,
+      "hunger_base": 4,
+      "relationship_base": 3,
+      "risk_factor": 4,
+      "is_key_character": true,
+      "description": "配给站的守卫。有武器，有脾气。他如果饿急了，什么事都干得出来。",
+      "dialogue": {
+        "hungry": "我守着粮仓，你看着办。",
+        "fed": "公平就好。我认你这个人。",
+        "denied": "你觉得合适吗？我拿命在守这扇门。",
+        "critical": "别逼我。别逼我动手。"
+      },
+      "traits": ["dangerous", "armed", "volatile"]
+    },
+    {
+      "id": "shu_sheng",
+      "name": "书生李",
+      "role": "scholar",
+      "age": 31,
+      "hunger_base": 2,
+      "relationship_base": 5,
+      "risk_factor": 1,
+      "is_key_character": false,
+      "description": "识字的人，负责记录库存和分配。他说数字不会说谎，但人心会。",
+      "dialogue": {
+        "hungry": "我可以少吃，但墨不能断。",
+        "fed": "思路清晰多了。今天的账我能核完。",
+        "denied": "记下了。（低头写字，不知道在写什么。）",
+        "critical": "手在抖，字写不成了……"
+      },
+      "traits": ["rational", "recorder", "subtle"]
+    }
+  ]
+}

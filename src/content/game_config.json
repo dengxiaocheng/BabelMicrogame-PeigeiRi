@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "game": "peigei-ri",
+  "description": "配给日游戏配置：轮次结构、初始状态和结算阈值",
+
+  "rounds": {
+    "total": 3,
+    "phases": [
+      {
+        "id": 1,
+        "name": "第一轮：秩序",
+        "description": "第一轮配给。库存尚可，人心还没散。",
+        "events_per_round": 2,
+        "rations_available": 8,
+        "available_events": ["evt_morning_ritual", "evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_trade_offer"]
+      },
+      {
+        "id": 2,
+        "name": "第二轮：裂痕",
+        "description": "库存下降，矛盾浮现。昨天没吃饱的人今天更难对付。",
+        "events_per_round": 2,
+        "rations_available": 6,
+        "available_events": ["evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_secret_stash", "evt_elder_sacrifice", "evt_scholar_warning", "evt_trade_offer", "evt_night_reflection"]
+      },
+      {
+        "id": 3,
+        "name": "第三轮：抉择",
+        "description": "粮仓见底。每一个选择都是取舍，每一个人都在边缘。",
+        "events_per_round": 2,
+        "rations_available": 4,
+        "available_events": ["evt_ration_shortage", "evt_hungry_child", "evt_guard_pressure", "evt_elder_sacrifice", "evt_scholar_warning", "evt_night_reflection"]
+      }
+    ]
+  },
+
+  "initial_state": {
+    "player": {
+      "hunger": 0,
+      "rations": 8,
+      "guilt": 0,
+      "debt": 0
+    },
+    "hunger_per_round": 1,
+    "description": "每轮分配结束后，所有角色 hunger 自动 +1（饥饿自然增长）"
+  },
+
+  "thresholds": {
+    "hunger": {
+      "satisfied": 0,
+      "hungry": 3,
+      "critical": 5,
+      "fatal": 7
+    },
+    "relationship": {
+      "hostile": -3,
+      "neutral": 0,
+      "friendly": 5,
+      "loyal": 8
+    },
+    "risk": {
+      "safe": 0,
+      "uneasy": 3,
+      "dangerous": 6,
+      "critical": 9
+    },
+    "guilt": {
+      "low": 2,
+      "medium": 5,
+      "high": 8
+    }
+  },
+
+  "endings": {
+    "success": {
+      "id": "stable",
+      "name": "稳定结算",
+      "condition": "all_key_characters_hunger < critical AND player.hunger < fatal",
+      "text": "配给日结束了。没有人倒下，虽然没有人吃饱。明天还有新的口粮运来——如果运气好的话。你把名册合上，长长地吐了一口气。"
+    },
+    "failures": [
+      {
+        "id": "child_starved",
+        "name": "小梅倒下了",
+        "condition": "xiao_mei.hunger >= fatal",
+        "text": "小梅昏倒的那天，没有人说话。老陈抱着她，像抱着一片要碎掉的叶子。你站在一旁，手里攥着空碗，觉得自己是世界上最没用的人。"
+      },
+      {
+        "id": "elder_starved",
+        "name": "老陈没能撑住",
+        "condition": "old_chen.hunger >= fatal",
+        "text": "老陈走了。不是轰轰烈烈地走，而是安安静静地在睡梦中再没醒来。小梅趴在他身上哭到没有声音。村子里最年长的人，带走了最多记忆的人，就这样空了一个位置。"
+      },
+      {
+        "id": "guard_revolt",
+        "name": "王虎失控",
+        "condition": "guard_wang.risk >= critical",
+        "text": "王虎拔了刀。不是为了吓唬人——是真的失控了。粮仓的门被撞开，粮食撒了一地。在混乱中，没有人是赢家。"
+      },
+      {
+        "id": "player_collapse",
+        "name": "你倒下了",
+        "condition": "player.hunger >= fatal OR player.guilt >= 10",
+        "text": "你撑不住了。不是因为饿，也不是因为愧疚——是因为两者叠加在一起，把你从内部掏空了。配给站换了个新人来管。希望他做得比你好。"
+      }
+    ]
+  },
+
+  "state_rules": {
+    "hunger_cap": 10,
+    "relationship_cap": 10,
+    "risk_cap": 10,
+    "guilt_cap": 10,
+    "hunger_floor": 0,
+    "relationship_floor": -10,
+    "risk_floor": 0,
+    "clamping": "所有状态值在 floor 和 cap 之间钳制"
+  }
+}

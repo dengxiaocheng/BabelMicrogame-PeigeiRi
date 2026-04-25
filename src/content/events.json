@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "game": "peigei-ri",
+  "description": "配给日事件池：每次分配中玩家面临的抉择与困境",
+  "events": [
+    {
+      "id": "evt_hungry_child",
+      "phase": [1, 2, 3],
+      "trigger": "xiao_mei.hunger >= 4",
+      "title": "小梅的哭声",
+      "narrative": "分配还没开始，小梅就拉住了你的衣角。她瘦小的脸上满是泪痕，肚子咕咕作响。老陈站在一旁，嘴唇紧抿，什么也没说。",
+      "choices": [
+        {
+          "id": "feed_child_first",
+          "text": "优先给小梅分一份",
+          "effects": {
+            "xiao_mei": { "hunger": -3, "relationship": 2 },
+            "old_chen": { "relationship": 2 },
+            "guard_wang": { "relationship": -1 },
+            "player": { "rations": -1, "guilt": -1 }
+          },
+          "feedback": "小梅破涕为笑。老陈向你微微点头。王虎在门口冷哼了一声。"
+        },
+        {
+          "id": "fair_distribution",
+          "text": "按规则分配，不破例",
+          "effects": {
+            "xiao_mei": { "hunger": 0, "relationship": -1 },
+            "old_chen": { "relationship": -1 },
+            "guard_wang": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 2 }
+          },
+          "feedback": "小梅的眼泪没停。老陈别过头去。规矩是守住了，但代价是什么？"
+        },
+        {
+          "id": "share_own_ration",
+          "text": "把自己的份分给小梅",
+          "effects": {
+            "xiao_mei": { "hunger": -2, "relationship": 3 },
+            "old_chen": { "relationship": 3 },
+            "player": { "rations": -1, "hunger": 2, "guilt": -2 }
+          },
+          "feedback": "你把碗递过去。小梅小心翼翼地接过。你自己的胃在收缩，但心里轻了一些。"
+        }
+      ]
+    },
+    {
+      "id": "evt_worker_demand",
+      "phase": [1, 2],
+      "trigger": "shi_fu.hunger >= 3",
+      "title": "石匠的要求",
+      "narrative": "老赵把工具重重搁在地上，走到你面前。「今天搬了三百块砖。配给的量不够一个干体力活的撑到天黑。」他的声音不大，但周围干活的人都听见了。",
+      "choices": [
+        {
+          "id": "extra_for_worker",
+          "text": "给老赵加半份",
+          "effects": {
+            "shi_fu": { "hunger": -2, "relationship": 2 },
+            "lin_sao": { "relationship": -1 },
+            "player": { "rations": -1, "guilt": -1 }
+          },
+          "feedback": "老赵点点头，回去继续干活了。林嫂的眉头皱了起来——锅里的粮又少了。"
+        },
+        {
+          "id": "reject_demand",
+          "text": "拒绝，维持标准配给",
+          "effects": {
+            "shi_fu": { "hunger": 0, "relationship": -2, "risk": 1 },
+            "lin_sao": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 1 }
+          },
+          "feedback": "老赵沉默了一会。「行。」他转身回去，但砖搬得慢了很多。"
+        },
+        {
+          "id": "negotiate_half",
+          "text": "提议减量但优先",
+          "effects": {
+            "shi_fu": { "hunger": -1, "relationship": 0 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "「半份就半份，」老赵说，「但明天我第一个领。」"
+        }
+      ]
+    },
+    {
+      "id": "evt_guard_pressure",
+      "phase": [1, 2, 3],
+      "trigger": "guard_wang.hunger >= 3",
+      "title": "守卫的暗示",
+      "narrative": "王虎把长矛靠在粮仓门上，慢慢走到你身边。「配给站长，咱们聊聊？」他的手搭在刀柄上，不带威胁，但也不算友好。「你看，我守着粮仓，风餐露宿的……」",
+      "choices": [
+        {
+          "id": "comply_guard",
+          "text": "给王虎额外配给",
+          "effects": {
+            "guard_wang": { "hunger": -2, "relationship": 3, "risk": -2 },
+            "shi_fu": { "relationship": -1 },
+            "player": { "rations": -1, "guilt": 1 }
+          },
+          "feedback": "王虎拍了拍你的肩。「你是个明白人。」但你知道，用粮食换安宁，能撑多久？"
+        },
+        {
+          "id": "refuse_guard",
+          "text": "严词拒绝",
+          "effects": {
+            "guard_wang": { "hunger": 0, "relationship": -3, "risk": 3 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "王虎的眼神冷了下来。「行，你说了算。」他走回门口，手始终没离开刀柄。"
+        },
+        {
+          "id": "promise_later",
+          "text": "安抚，承诺下一轮补上",
+          "effects": {
+            "guard_wang": { "hunger": 0, "relationship": -1, "risk": 1 },
+            "player": { "rations": 0, "guilt": 1, "debt": 1 }
+          },
+          "feedback": "「下一轮，」王虎重复了一遍。「我记着。」"
+        }
+      ]
+    },
+    {
+      "id": "evt_secret_stash",
+      "phase": [2, 3],
+      "trigger": "random.chance >= 0.4",
+      "title": "偷粮的影子",
+      "narrative": "深夜，你听到粮仓方向有响动。借着月光，你看到一个人影从粮仓后门摸出来，怀里鼓鼓囊囊的。走近一看——是林嫂。",
+      "choices": [
+        {
+          "id": "report_theft",
+          "text": "公开揭发",
+          "effects": {
+            "lin_sao": { "relationship": -4, "hunger": -1 },
+            "guard_wang": { "relationship": 1, "risk": -1 },
+            "player": { "rations": 1, "guilt": 1 }
+          },
+          "feedback": "林嫂的脸白了。她没辩解，只是把粮袋放在地上。第二天，再没人跟她说话了。"
+        },
+        {
+          "id": "confront_private",
+          "text": "私下警告，要回粮食",
+          "effects": {
+            "lin_sao": { "relationship": -2 },
+            "player": { "rations": 1, "guilt": 0 }
+          },
+          "feedback": "林嫂低着头。「我是给我隔壁的老孙家拿的……他家小的三天没吃东西了。」你不知道该不该信。"
+        },
+        {
+          "id": "look_away",
+          "text": "装作没看见",
+          "effects": {
+            "lin_sao": { "relationship": 2 },
+            "guard_wang": { "risk": 1 },
+            "player": { "rations": 0, "guilt": 2 }
+          },
+          "feedback": "你转身走了。背后传来林嫂小声的哽咽。你知道，秩序正在一点点崩塌。"
+        }
+      ]
+    },
+    {
+      "id": "evt_elder_sacrifice",
+      "phase": [2, 3],
+      "trigger": "old_chen.hunger >= 4",
+      "title": "老陈的碗",
+      "narrative": "到了老陈面前，他把自己的碗推了回来。「给我孙女就好。我老了，少吃一顿没事。」小梅站在他身后，紧紧拽着他的衣角。",
+      "choices": [
+        {
+          "id": "accept_sacrifice",
+          "text": "接受老陈的决定",
+          "effects": {
+            "old_chen": { "hunger": 2, "relationship": 1 },
+            "xiao_mei": { "hunger": -2, "relationship": 1 },
+            "player": { "rations": 0, "guilt": 3 }
+          },
+          "feedback": "老陈微微笑了。但你看到他的手在发抖。小梅一边吃，一边看着爷爷。"
+        },
+        {
+          "id": "force_elder_eat",
+          "text": "坚持老陈也要吃",
+          "effects": {
+            "old_chen": { "hunger": -2, "relationship": 2 },
+            "xiao_mei": { "hunger": 0 },
+            "player": { "rations": -1, "guilt": -1 }
+          },
+          "feedback": "「你吃了，小梅才能安心。」你说。老陈看了你很久，终于端起了碗。"
+        }
+      ]
+    },
+    {
+      "id": "evt_scholar_warning",
+      "phase": [2, 3],
+      "trigger": "shu_sheng.relationship >= 5",
+      "title": "账本的秘密",
+      "narrative": "深夜，书生李悄悄找到你，递过来一本薄册子。「配给站长，你看看这个。」账目上，有一笔笔对不上的出入——有人在系统性地多领口粮。",
+      "choices": [
+        {
+          "id": "investigate",
+          "text": "追查到底",
+          "effects": {
+            "shu_sheng": { "relationship": 3 },
+            "guard_wang": { "relationship": -2, "risk": 2 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "你按账本查下去，线索指向了一个你不想相信的人。"
+        },
+        {
+          "id": "correct_quietly",
+          "text": "悄悄修正账目，不声张",
+          "effects": {
+            "shu_sheng": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 1 }
+          },
+          "feedback": "你把出入抹平了。但问题真的解决了吗？"
+        },
+        {
+          "id": "ignore_warning",
+          "text": "不多管闲事",
+          "effects": {
+            "shu_sheng": { "relationship": -3 },
+            "player": { "rations": 0, "guilt": 1 }
+          },
+          "feedback": "书生李收回册子，叹了口气。「好吧。只是……数字不会说谎，但人心会。」"
+        }
+      ]
+    },
+    {
+      "id": "evt_ration_shortage",
+      "phase": [3],
+      "trigger": "always",
+      "title": "粮仓见底",
+      "narrative": "最后一轮分配。你打开粮仓，里面只剩下勉强够三个人吃的粮食。门口排着六个人。风从墙缝里灌进来，吹得油灯直晃。",
+      "choices": [
+        {
+          "id": "prioritize_key",
+          "text": "优先分配给关键人物",
+          "effects": {
+            "old_chen": { "hunger": -2 },
+            "xiao_mei": { "hunger": -2 },
+            "guard_wang": { "hunger": -1 },
+            "shi_fu": { "hunger": 2, "relationship": -2 },
+            "lin_sao": { "hunger": 2, "relationship": -1 },
+            "player": { "rations": -1, "guilt": 2 }
+          },
+          "feedback": "老陈和小梅的碗里有了粮食。王虎拿到了半份。但林嫂和老赵的碗空了。"
+        },
+        {
+          "id": "equal_starvation",
+          "text": "平均分配，每人半份",
+          "effects": {
+            "old_chen": { "hunger": 1 },
+            "xiao_mei": { "hunger": 1 },
+            "guard_wang": { "hunger": 1 },
+            "shi_fu": { "hunger": 1 },
+            "lin_sao": { "hunger": 1 },
+            "shu_sheng": { "hunger": 1 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "六个人，六个半空的碗。没有人满意，但也没有人倒下。这大概就是公平的样子。"
+        },
+        {
+          "id": "sacrifice_self",
+          "text": "把自己的份也拿出来分",
+          "effects": {
+            "old_chen": { "hunger": -1 },
+            "xiao_mei": { "hunger": -1 },
+            "shi_fu": { "hunger": -1 },
+            "player": { "hunger": 3, "rations": -1, "guilt": -1 }
+          },
+          "feedback": "你把自己的碗也倒了进去。胃在灼烧，但至少今晚，每个人都能吃到一口。"
+        }
+      ]
+    },
+    {
+      "id": "evt_trade_offer",
+      "phase": [1, 2],
+      "trigger": "random.chance >= 0.5",
+      "title": "外来的交换",
+      "narrative": "一个外村人带着一袋干肉出现在配给站门口。「用你们多余的粮食换，」他说，「一换一，公平交易。」你们并没有多余的粮食。但他看起来也不打算空手离开。",
+      "choices": [
+        {
+          "id": "make_trade",
+          "text": "用一份口粮换干肉",
+          "effects": {
+            "player": { "rations": -1, "guilt": 0 },
+            "meta": { "bonus_rations": 2 }
+          },
+          "feedback": "交易完成了。你多了两份干肉，但少了一份今天的口粮。希望这笔账算得过来。"
+        },
+        {
+          "id": "refuse_trade",
+          "text": "拒绝交易，请他离开",
+          "effects": {
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "外村人耸耸肩走了。你不知道那个选择对不对，但至少粮仓没少。"
+        },
+        {
+          "id": "share_information",
+          "text": "用情报代替粮食交换",
+          "effects": {
+            "shu_sheng": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "你告诉了他附近水源的位置。他留下了半袋干肉作为感谢。有时候，嘴比粮食管用。"
+        }
+      ]
+    },
+    {
+      "id": "evt_morning_ritual",
+      "phase": [1],
+      "trigger": "always",
+      "title": "配给日的早晨",
+      "narrative": "天还没亮，你就被叫醒了。今天是配给日——每周一次的口粮分配。你走进配给站，油灯照着墙上歪歪扭扭的名册。六张嘴等着你，但粮仓里的存量……你深吸一口气。",
+      "choices": [
+        {
+          "id": "check_inventory",
+          "text": "先清点库存再开始",
+          "effects": {
+            "shu_sheng": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "书生李帮你核对了一遍数字。情况比预想的稍好一点——但也只是稍好。"
+        },
+        {
+          "id": "start_immediately",
+          "text": "直接开始分配",
+          "effects": {
+            "shi_fu": { "relationship": 1 },
+            "player": { "rations": 0, "guilt": 0 }
+          },
+          "feedback": "干活的人喜欢效率。你开始叫号，但心里没底。"
+        }
+      ]
+    },
+    {
+      "id": "evt_night_reflection",
+      "phase": [2, 3],
+      "trigger": "player.guilt >= 5",
+      "title": "深夜辗转",
+      "narrative": "夜深了，但你睡不着。今天的分配在你脑子里反复回放——谁多了、谁少了、谁的眼神你不敢接。远处传来隐约的哭声，不知道是小梅还是别人。",
+      "choices": [
+        {
+          "id": "accept_burden",
+          "text": "承受这份重量",
+          "effects": {
+            "player": { "guilt": -1 }
+          },
+          "feedback": "你翻了个身，闭上眼。明天还有一轮。你只能做得更好，不能做回去了。"
+        },
+        {
+          "id": "seek_absolution",
+          "text": "去找老陈聊聊天",
+          "effects": {
+            "old_chen": { "relationship": 2 },
+            "player": { "guilt": -2 }
+          },
+          "feedback": "老陈没睡。他在月光下抽着旱烟。「难，」他说，「但有人做这个决定，总比没人做好。」"
+        }
+      ]
+    }
+  ]
+}

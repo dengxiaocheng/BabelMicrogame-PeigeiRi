@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>配给日</title>
+  <style>
+    :root { --bg:#1a1a2e; --fg:#e0e0e0; --accent:#e2b714; --card:#16213e; --border:#0f3460; --danger:#c0392b; --success:#27ae60; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; background:var(--bg); color:var(--fg); font-family:"Noto Serif SC","Songti SC",serif; }
+    #app { width:min(680px,100%); padding:2rem; }
+    #status-bar { display:flex; gap:1rem; flex-wrap:wrap; color:var(--accent); border-bottom:1px solid var(--border); padding-bottom:.8rem; margin-bottom:1.5rem; }
+    #event-title { color:var(--accent); font-weight:bold; margin-bottom:.8rem; }
+    #narrative { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1.4rem; min-height:120px; line-height:1.8; white-space:pre-wrap; margin-bottom:1.4rem; }
+    #choices { display:flex; flex-direction:column; gap:.6rem; }
+    .choice-btn { background:var(--card); border:1px solid var(--border); color:var(--fg); padding:.8rem 1rem; border-radius:4px; cursor:pointer; text-align:left; font:inherit; }
+    .choice-btn:hover:not(:disabled), .choice-btn.selected { border-color:var(--accent); background:rgba(226,183,20,.12); }
+    .choice-btn:disabled { opacity:.4; cursor:default; }
+    .continue-prompt { text-align:center; color:var(--accent); border:1px dashed var(--border); padding:.8rem; cursor:pointer; }
+    #feedback { margin-top:1.2rem; padding:1rem; border-left:3px solid var(--accent); background:rgba(226,183,20,.08); line-height:1.7; }
+    #ending { text-align:center; padding:2rem; }
+    #ending.success h2 { color:var(--success); }
+    #ending.failure h2 { color:var(--danger); }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <h1>配给日</h1>
+    <div id="status-bar">
+      <span id="s-round"></span>
+      <span id="s-phase"></span>
+      <span id="s-hunger"></span>
+      <span id="s-rations"></span>
+      <span id="s-guilt"></span>
+    </div>
+    <div id="phase-transition"></div>
+    <div id="event-title"></div>
+    <div id="narrative">加载中...</div>
+    <div id="choices"></div>
+    <div id="feedback" style="display:none"></div>
+    <div id="ending" style="display:none"><h2 id="ending-title"></h2><p id="ending-text"></p></div>
+  </main>
+  <script type="module">
+    import { UIRenderer } from "./src/ui/renderer.js";
+    import { createInitialState, runCycle } from "./src/state/engine.js";
+
+    const [config, charactersDoc, eventsDoc] = await Promise.all([
+      fetch("src/content/game_config.json").then((r) => r.json()),
+      fetch("src/content/characters.json").then((r) => r.json()),
+      fetch("src/content/events.json").then((r) => r.json()),
+    ]);
+    const eventPool = eventsDoc.events;
+    let state = createInitialState(config, charactersDoc.characters);
+
+    const ui = new UIRenderer({
+      round: document.getElementById("s-round"),
+      phase: document.getElementById("s-phase"),
+      hunger: document.getElementById("s-hunger"),
+      rations: document.getElementById("s-rations"),
+      guilt: document.getElementById("s-guilt"),
+      eventTitle: document.getElementById("event-title"),
+      narrative: document.getElementById("narrative"),
+      choices: document.getElementById("choices"),
+      feedback: document.getElementById("feedback"),
+      ending: document.getElementById("ending"),
+      endingTitle: document.getElementById("ending-title"),
+      endingText: document.getElementById("ending-text"),
+      phaseTransition: document.getElementById("phase-transition"),
+    });
+
+    function phaseName() {
+      return config.rounds.phases.find((p) => p.id === state.currentPhaseId)?.name ?? "结算";
+    }
+    function pickEvent() {
+      const pool = eventPool.filter((e) => e.phase.includes(state.currentPhaseId));
+      return pool.length === 0 || state.gameOver ? null : pool[state.eventIndex % pool.length];
+    }
+    function presentEvent() {
+      const event = pickEvent();
+      if (!event) {
+        document.getElementById("narrative").textContent = "没有可用事件。";
+        return;
+      }
+      ui.renderStatus(state, phaseName());
+      ui.renderEvent(event, (choice) => {
+        const previousPhaseId = state.currentPhaseId;
+        const result = runCycle(state, choice.effects, config);
+        state = result.state;
+        if (!state.gameOver && state.currentPhaseId === previousPhaseId) {
+          state = { ...state, eventIndex: state.eventIndex + 1 };
+        }
+        ui.renderFeedback(choice.feedback);
+        ui.renderStatus(state, phaseName());
+        if (result.ending) {
+          ui.renderEnding(result.ending);
+          return;
+        }
+        if (state.currentPhaseId !== previousPhaseId) ui.renderPhaseTransition(phaseName());
+        ui.showContinue(presentEvent);
+      });
+    }
+    presentEvent();
+  </script>
+</body>
+</html>
