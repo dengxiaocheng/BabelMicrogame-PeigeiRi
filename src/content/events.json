@@ -357,6 +357,167 @@
           "feedback": "老陈没睡。他在月光下抽着旱烟。「难，」他说，「但有人做这个决定，总比没人做好。」"
         }
       ]
+    },
+    {
+      "id": "evt_lineup",
+      "phase": [1, 2, 3],
+      "trigger": "always",
+      "title": "排队的人",
+      "narrative": "你站在配给台后面，面前是一条弯弯曲曲的队伍。最前面是老陈，佝偻着背，小梅拽着他的衣角。石匠老赵双臂交叉，青筋暴起。林嫂低着头，手指无意识地搓着围裙。王虎靠在墙上，眼神扫过每个人。书生李拿着笔，在数人头。六个人的肚子都在叫。你看在眼里。",
+      "choices": [
+        {
+          "id": "prioritize_vulnerable",
+          "text": "让老弱先领",
+          "effects": {
+            "old_chen": { "relationship": 1 },
+            "xiao_mei": { "relationship": 1 },
+            "shi_fu": { "relationship": -1 },
+            "player": { "guilt": -1 }
+          },
+          "feedback": "「老人和孩子先来。」石匠老赵皱了皱眉，但没有反驳。小梅拉着老陈的手走上前来，眼睛亮了一下。"
+        },
+        {
+          "id": "prioritize_workers",
+          "text": "让干体力活的先领",
+          "effects": {
+            "shi_fu": { "relationship": 2 },
+            "guard_wang": { "relationship": 1 },
+            "old_chen": { "relationship": -1 },
+            "player": { "guilt": 1 }
+          },
+          "feedback": "「干活的人先来，有劲才能继续干。」老陈什么也没说，只是握紧了小梅的手。王虎和石匠老赵先走了上去。"
+        },
+        {
+          "id": "strict_order",
+          "text": "按登记顺序来，不改动",
+          "effects": {
+            "shu_sheng": { "relationship": 2 },
+            "player": { "guilt": 0 }
+          },
+          "feedback": "你翻开花名册。「按顺序，一个一个来。」没有人特别高兴，但也没有人特别不满。至少今天是如此。"
+        }
+      ]
+    },
+    {
+      "id": "evt_queue_dispute",
+      "phase": [1, 2],
+      "trigger": "always",
+      "title": "插队",
+      "narrative": "分配刚开始，王虎直接走到队伍最前面。「我先领。」不是请求。队伍里响起压低的声音。老赵攥紧了拳头，老陈低下了头。六个人排了两个小时的队，但王虎手里有刀。",
+      "choices": [
+        {
+          "id": "let_guard_skip",
+          "text": "让王虎先领",
+          "effects": {
+            "guard_wang": { "relationship": 1, "risk": -1 },
+            "shi_fu": { "relationship": -1 },
+            "player": { "guilt": 1 }
+          },
+          "feedback": "你侧身让开。王虎领完，拍了拍你的肩膀。队伍里没人说话，但你感觉到几十道目光钉在背上。"
+        },
+        {
+          "id": "enforce_queue",
+          "text": "坚持按顺序来",
+          "effects": {
+            "guard_wang": { "relationship": -2, "risk": 2 },
+            "shi_fu": { "relationship": 2 },
+            "old_chen": { "relationship": 1 },
+            "player": { "guilt": 0 }
+          },
+          "feedback": "「规则对所有人都一样。」你的声音比你感觉的更稳。王虎盯着你看了三秒，然后走回队伍后面。你不知道这份勇气能撑几次。"
+        },
+        {
+          "id": "distract_and_defer",
+          "text": "岔开话题，承诺最后多给一点",
+          "effects": {
+            "guard_wang": { "relationship": 0, "risk": 0 },
+            "player": { "rations": -1, "debt": 1, "guilt": 1 }
+          },
+          "feedback": "「别急，到你了自然有你的一份。」王虎退了一步，但你知道——你欠了他一个人情。"
+        }
+      ]
+    },
+    {
+      "id": "evt_weighing_scarcity",
+      "phase": [1, 2, 3],
+      "trigger": "player.rations <= 4",
+      "title": "勺底见空",
+      "narrative": "你一勺一勺地舀着，量着。前面几个人还够，但越往后，勺子探进桶里的深度越来越浅。排到最后的人开始伸长脖子看你的桶。你还没分到一半，心里已经在算了——不够。不可能够。",
+      "choices": [
+        {
+          "id": "reduce_all_equal",
+          "text": "均匀减少每人的量",
+          "effects": {
+            "shi_fu": { "hunger": 1 },
+            "old_chen": { "hunger": 1 },
+            "xiao_mei": { "hunger": 1 },
+            "lin_sao": { "hunger": 1 },
+            "guard_wang": { "hunger": 1 },
+            "shu_sheng": { "hunger": 1 },
+            "player": { "guilt": 1 }
+          },
+          "feedback": "你把每个人的碗都少盛了一点。没有人注意到——至少暂时没有。但每个人都会饿得更快。"
+        },
+        {
+          "id": "skip_last",
+          "text": "前面的人足额，后面的人减半",
+          "effects": {
+            "shi_fu": { "hunger": -1 },
+            "shu_sheng": { "hunger": 2, "relationship": -2 },
+            "lin_sao": { "hunger": 2, "relationship": -1 },
+            "player": { "guilt": 2 }
+          },
+          "feedback": "先到先得——这是你能想到的理由。石匠老赵端着满满的碗走开了，但排在后面的书生李和林嫂只分到了一半。他们没说什么，但眼神说明了一切。"
+        },
+        {
+          "id": "add_own_to_barrel",
+          "text": "把自己的份倒进桶里",
+          "effects": {
+            "player": { "hunger": 2, "rations": -1, "guilt": -1 },
+            "old_chen": { "hunger": -1 },
+            "xiao_mei": { "hunger": -1 },
+            "lin_sao": { "hunger": -1 }
+          },
+          "feedback": "你把自己的碗倒扣在桶上。粮食不多，但够了。你的胃在抗议，但至少今天每个人碗里都有东西。"
+        }
+      ]
+    },
+    {
+      "id": "evt_debt_called",
+      "phase": [2, 3],
+      "trigger": "player.debt >= 1",
+      "title": "人情债",
+      "narrative": "你正舀着粮食，王虎走到你身边，声音压得很低。「上次你答应过我的。」他的手没有放在刀上，但你感觉得到那根弦绷着。「我不是来闹事的。但我说过——我记着。」",
+      "choices": [
+        {
+          "id": "honor_debt",
+          "text": "还人情——给王虎额外配给",
+          "effects": {
+            "guard_wang": { "hunger": -2, "relationship": 2, "risk": -1 },
+            "shi_fu": { "relationship": -1 },
+            "player": { "debt": -1, "rations": -1, "guilt": -1 }
+          },
+          "feedback": "你多舀了一勺放进王虎的碗里。「两清了。」他终于松了口气。但旁边排队的人看到了，沉默比声音更刺耳。"
+        },
+        {
+          "id": "refuse_debt",
+          "text": "这次还不了，再拖一轮",
+          "effects": {
+            "guard_wang": { "relationship": -2, "risk": 2 },
+            "player": { "guilt": 2 }
+          },
+          "feedback": "王虎的眼睛眯了起来。「又拖？」他没有多说，但转身时肩膀绷得像弓弦。你知道，人情债的利息在涨。"
+        },
+        {
+          "id": "partial_repay",
+          "text": "给一点额外的，说剩下的下次还",
+          "effects": {
+            "guard_wang": { "hunger": -1, "relationship": 0, "risk": 0 },
+            "player": { "debt": 0, "rations": 0, "guilt": 0 }
+          },
+          "feedback": "「不多，但我没忘。」你往他碗里多加了一点。王虎看了看碗，又看了看你。「行。算你记性好。」"
+        }
+      ]
     }
   ]
 }

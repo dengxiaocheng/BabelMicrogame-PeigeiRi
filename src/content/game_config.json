@@ -12,7 +12,7 @@
         "description": "第一轮配给。库存尚可，人心还没散。",
         "events_per_round": 2,
         "rations_available": 8,
-        "available_events": ["evt_morning_ritual", "evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_trade_offer"]
+        "available_events": ["evt_morning_ritual", "evt_lineup", "evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_queue_dispute", "evt_weighing_scarcity", "evt_trade_offer"]
       },
       {
         "id": 2,
@@ -20,7 +20,7 @@
         "description": "库存下降，矛盾浮现。昨天没吃饱的人今天更难对付。",
         "events_per_round": 2,
         "rations_available": 6,
-        "available_events": ["evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_secret_stash", "evt_elder_sacrifice", "evt_scholar_warning", "evt_trade_offer", "evt_night_reflection"]
+        "available_events": ["evt_lineup", "evt_hungry_child", "evt_worker_demand", "evt_guard_pressure", "evt_queue_dispute", "evt_weighing_scarcity", "evt_secret_stash", "evt_elder_sacrifice", "evt_scholar_warning", "evt_trade_offer", "evt_debt_called", "evt_night_reflection"]
       },
       {
         "id": 3,
@@ -28,7 +28,7 @@
         "description": "粮仓见底。每一个选择都是取舍，每一个人都在边缘。",
         "events_per_round": 2,
         "rations_available": 4,
-        "available_events": ["evt_ration_shortage", "evt_hungry_child", "evt_guard_pressure", "evt_elder_sacrifice", "evt_scholar_warning", "evt_night_reflection"]
+        "available_events": ["evt_lineup", "evt_ration_shortage", "evt_hungry_child", "evt_guard_pressure", "evt_weighing_scarcity", "evt_elder_sacrifice", "evt_scholar_warning", "evt_debt_called", "evt_night_reflection"]
       }
     ]
   },
@@ -110,9 +110,11 @@
     "relationship_cap": 10,
     "risk_cap": 10,
     "guilt_cap": 10,
+    "debt_cap": 5,
     "hunger_floor": 0,
     "relationship_floor": -10,
     "risk_floor": 0,
+    "debt_floor": 0,
     "clamping": "所有状态值在 floor 和 cap 之间钳制"
   }
 }
