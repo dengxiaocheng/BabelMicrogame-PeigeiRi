@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This repository is an independent Babel microgame source repository for: Babel Microgame: 配给日.
+This repository is an independent Babel microgame source repository for: 配给日.
 
 ## Mandatory Boundary
 
