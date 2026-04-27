@@ -16,6 +16,7 @@ const DEFAULT_RULES = {
   relationship_cap: 10, relationship_floor: -10,
   risk_cap: 10, risk_floor: 0,
   guilt_cap: 10,
+  pressure_cap: 10,
 };
 
 export function loadContent() {
@@ -61,6 +62,7 @@ export function createInitialState(config, characters) {
     keyCharacters,
     bonusRations: 0,
     roundRations: phase.rations_available,
+    pressure: 0,
     gameOver: false,
     ending: null,
   };
@@ -159,6 +161,39 @@ export function advanceRound(state, config) {
   };
 }
 
+export function calculatePressure(state, rules = DEFAULT_RULES) {
+  const resolvedRules = { ...DEFAULT_RULES, ...rules };
+  const chars = Object.values(state.characters);
+  if (chars.length === 0) return 0;
+
+  const avgHunger = chars.reduce((s, c) => s + c.hunger, 0) / chars.length;
+  const avgRisk = chars.reduce((s, c) => s + c.risk, 0) / chars.length;
+  const debt = Math.abs(state.player.debt ?? 0);
+
+  const raw = avgHunger + state.player.hunger * 0.5 + avgRisk * 0.5 + debt * 0.3;
+  return Math.round(clamp(raw, 0, resolvedRules.pressure_cap ?? 10) * 10) / 10;
+}
+
+export function settleRound(state, config) {
+  const rules = { ...DEFAULT_RULES, ...(config.state_rules ?? {}) };
+  const pressure = calculatePressure(state, rules);
+  const criticalPressure = config.thresholds?.pressure?.critical ?? 7;
+
+  let settledState = { ...state, pressure };
+
+  if (pressure >= criticalPressure) {
+    const characters = {};
+    for (const [id, c] of Object.entries(state.characters)) {
+      characters[id] = clampCharacter({ ...c, risk: c.risk + 1 }, rules);
+    }
+    settledState = { ...settledState, characters };
+  }
+
+  const ending = checkEndings(settledState, config);
+  if (ending) return { state: { ...settledState, gameOver: true, ending }, ending };
+  return { state: settledState, ending: null };
+}
+
 export function runCycle(state, choiceEffects, config) {
   if (state.gameOver) {
     return { state, ending: state.ending };
@@ -173,12 +208,10 @@ export function runCycle(state, choiceEffects, config) {
   }
 
   nextState = tickHunger(nextState, config.initial_state.hunger_per_round, config.state_rules);
-  const roundEnding = checkEndings(nextState, config);
-  if (roundEnding) {
-    return finish(nextState, roundEnding);
-  }
+  const settled = settleRound(nextState, config);
+  if (settled.ending) return settled;
 
-  nextState = advanceRound(nextState, config);
+  nextState = advanceRound(settled.state, config);
   const finalEnding = checkEndings(nextState, config);
   if (finalEnding) {
     return finish(nextState, finalEnding);

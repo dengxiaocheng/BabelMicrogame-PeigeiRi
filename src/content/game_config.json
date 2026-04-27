@@ -63,6 +63,11 @@
       "dangerous": 6,
       "critical": 9
     },
+    "pressure": {
+      "low": 3,
+      "medium": 5,
+      "critical": 7
+    },
     "guilt": {
       "low": 2,
       "medium": 5,
@@ -109,6 +114,7 @@
     "hunger_cap": 10,
     "relationship_cap": 10,
     "risk_cap": 10,
+    "pressure_cap": 10,
     "guilt_cap": 10,
     "debt_cap": 5,
     "hunger_floor": 0,

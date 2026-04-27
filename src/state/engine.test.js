@@ -3,17 +3,20 @@ import { describe, it } from "node:test";
 import {
   advanceRound,
   applyChoice,
+  calculatePressure,
   checkEndings,
   createInitialState,
   initGame,
   loadContent,
   runCycle,
+  settleRound,
   tickHunger,
 } from "./engine.js";
 const RULES = {
   hunger_cap: 10, hunger_floor: 0,
   relationship_cap: 10, relationship_floor: -10,
   risk_cap: 10, risk_floor: 0,
+  pressure_cap: 10,
   guilt_cap: 10,
 };
 function makeConfig(overrides = {}) {
@@ -30,6 +33,7 @@ function makeConfig(overrides = {}) {
     thresholds: {
       hunger: { critical: 5, fatal: 7 },
       risk: { critical: 9 },
+      pressure: { low: 3, medium: 5, critical: 7 },
     },
     endings: {
       success: { id: "stable", name: "stable" },
@@ -155,6 +159,72 @@ describe("checkEndings", () => {
     state.characters.guard_wang.hunger = 2;
     state.characters.guard_wang.risk = 9;
     assert.equal(checkEndings(state, makeConfig()).id, "guard_revolt");
+  });
+});
+describe("calculatePressure", () => {
+  it("computes pressure from aggregate state", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    // avgHunger = (5+3+4)/3 = 4, playerHunger=0, avgRisk=0, debt=0
+    assert.equal(calculatePressure(state, RULES), 4);
+  });
+  it("increases with hunger, risk, and debt", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    state.characters.xiao_mei.hunger = 8;
+    state.characters.guard_wang.risk = 5;
+    state.player.hunger = 3;
+    state.player.debt = 2;
+    // avgHunger=(8+3+4)/3=5, avgRisk=5/3≈1.67
+    // 5 + 3*0.5 + 1.67*0.5 + 2*0.3 ≈ 7.9
+    assert.ok(calculatePressure(state, RULES) >= 7.5);
+  });
+  it("clamps to pressure_cap", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    state.characters.xiao_mei.hunger = 10;
+    state.characters.old_chen.hunger = 10;
+    state.characters.guard_wang.hunger = 10;
+    state.player.hunger = 10;
+    assert.equal(calculatePressure(state, RULES), 10);
+  });
+});
+describe("settleRound", () => {
+  it("updates pressure without overflow when below critical", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    const result = settleRound(state, makeConfig());
+    assert.equal(result.state.pressure, 4);
+    assert.equal(result.ending, null);
+    assert.equal(result.state.characters.xiao_mei.risk, 0);
+  });
+  it("increases all character risk on pressure overflow", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    state.characters.xiao_mei.hunger = 9;
+    state.characters.old_chen.hunger = 8;
+    state.characters.guard_wang.hunger = 9;
+    state.player.hunger = 5;
+    const result = settleRound(state, makeConfig());
+    assert.ok(result.state.pressure >= 7);
+    assert.equal(result.state.characters.xiao_mei.risk, 1);
+    assert.equal(result.state.characters.old_chen.risk, 1);
+    assert.equal(result.state.characters.guard_wang.risk, 1);
+  });
+  it("detects failure triggered by pressure overflow", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    state.characters.xiao_mei.hunger = 6;
+    state.characters.old_chen.hunger = 6;
+    state.characters.guard_wang.hunger = 9;
+    state.characters.guard_wang.risk = 8;
+    state.player.hunger = 5;
+    // avgHunger=(6+6+9)/3=7, avgRisk=8/3≈2.67, pressure≈10.8→10
+    // 10 >= 7 → overflow → guard_wang.risk=9 >= critical(9) → guard_revolt
+    const result = settleRound(state, makeConfig());
+    assert.equal(result.ending.id, "guard_revolt");
+    assert.equal(result.state.gameOver, true);
+  });
+  it("does not mutate the original state", () => {
+    const state = createInitialState(makeConfig(), CHARS);
+    state.characters.xiao_mei.hunger = 9;
+    const before = structuredClone(state);
+    settleRound(state, makeConfig());
+    assert.deepEqual(state, before);
   });
 });
 describe("advanceRound", () => {
