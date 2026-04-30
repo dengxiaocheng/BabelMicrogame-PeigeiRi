@@ -13,11 +13,11 @@
 
 ## State
 
-- resource
-- pressure
-- risk
-- relation
-- round
+- food
+- hunger
+- trust
+- suspicion
+- day
 
 ## UI
 
