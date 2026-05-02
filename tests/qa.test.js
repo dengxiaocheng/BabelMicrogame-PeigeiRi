@@ -190,3 +190,121 @@ describe("Boundary checks", () => {
     assert.equal(checkEndings(s, cfg()).id, "stable");
   });
 });
+
+// ---------------------------------------------------------------------------
+// 4. Primary Input → State Delta (_calcEffects allocation mapping)
+// ---------------------------------------------------------------------------
+describe("Primary Input → State Delta", () => {
+  function makeRenderer() {
+    const n = () => {};
+    const ui = new UIRenderer({
+      round:n,phase:n,hunger:n,rations:n,guilt:n,eventTitle:n,narrative:n,
+      choices:{innerHTML:"",appendChild:n,querySelectorAll:()=>[]},
+      feedback:n,ending:n,endingTitle:n,endingText:n,phaseTransition:n,
+    });
+    ui._alloc = { old_chen:0, xiao_mei:0, guard_wang:0 };
+    ui._state = { player:{ rations:8, hunger:0, guilt:0 }, currentRound:1 };
+    return ui;
+  }
+
+  it("1 ration block = -2 hunger per character", () => {
+    const ui = makeRenderer();
+    ui._alloc.xiao_mei = 1;
+    ui._alloc.old_chen = 1;
+    const fx = ui._calcEffects();
+    assert.equal(fx.xiao_mei.hunger, -2);
+    assert.equal(fx.old_chen.hunger, -2);
+  });
+
+  it("favored allocation (3 vs 1) gives relationship +1/-1", () => {
+    const ui = makeRenderer();
+    ui._alloc.xiao_mei = 3;
+    ui._alloc.old_chen = 1;
+    const fx = ui._calcEffects();
+    assert.equal(fx.xiao_mei.relationship, 1);
+    assert.equal(fx.old_chen.relationship, -1);
+  });
+
+  it("skipped characters get risk +1 and relationship -1", () => {
+    const ui = makeRenderer();
+    ui._alloc.xiao_mei = 2;
+    ui._alloc.old_chen = 2;
+    const fx = ui._calcEffects();
+    assert.equal(fx.guard_wang.risk, 1);
+    assert.equal(fx.guard_wang.relationship, -1);
+  });
+
+  it("player rations decrease by total allocated; guilt from disparity", () => {
+    const ui = makeRenderer();
+    ui._alloc.xiao_mei = 3;
+    ui._alloc.old_chen = 0;
+    ui._alloc.guard_wang = 1;
+    const fx = ui._calcEffects();
+    assert.equal(fx.player.rations, -4);
+    assert.ok(fx.player.guilt >= 1, "guilt from 3 vs 1 disparity");
+  });
+
+  it("allocation effects flow through engine to produce state delta", () => {
+    const s = createInitialState(cfg(), CH);
+    // Simulate: xiao_mei gets 2, old_chen gets 2, guard_wang skipped
+    const effects = {
+      xiao_mei:{ hunger:-4, relationship:0, risk:0 },
+      old_chen:{ hunger:-4, relationship:0, risk:0 },
+      guard_wang:{ hunger:0, relationship:-1, risk:1 },
+      player:{ rations:-4, hunger:0, guilt:1 },
+    };
+    const n = applyChoice(s, effects, R);
+    assert.equal(n.characters.xiao_mei.hunger, s.characters.xiao_mei.hunger - 4);
+    assert.equal(n.characters.guard_wang.risk, s.characters.guard_wang.risk + 1);
+    assert.equal(n.characters.guard_wang.relationship, s.characters.guard_wang.relationship - 1);
+    assert.equal(n.player.rations, s.player.rations - 4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. Acceptance Playthrough – core loop verification
+// ---------------------------------------------------------------------------
+describe("Acceptance Playthrough – core loop", () => {
+  it("full core loop: observe → allocate → settle → advance day", () => {
+    // Use events_per_round:1 so a single runCycle advances the day
+    const config = cfg({rounds:{total:3,phases:[
+      {id:1,events_per_round:1,rations_available:8},
+      {id:2,events_per_round:1,rations_available:6},
+      {id:3,events_per_round:1,rations_available:4}]}});
+
+    // Step 1: observe 5 required states visible
+    const s = createInitialState(config, CH);
+    assert.ok("rations" in s.player, "food state visible");
+    assert.ok(s.characters.xiao_mei.hunger >= 0, "hunger visible");
+    assert.ok(s.characters.old_chen.relationship !== undefined, "trust visible");
+    assert.ok(s.characters.guard_wang.risk >= 0, "suspicion visible");
+    assert.equal(s.currentRound, 1, "day visible");
+
+    // Step 2: allocate (simulating ration distribution to 2+ characters)
+    const effects = {
+      xiao_mei:{ hunger:-4, relationship:1, risk:0 },
+      old_chen:{ hunger:-2, relationship:-1, risk:0 },
+      guard_wang:{ hunger:0, relationship:-1, risk:1 },
+      player:{ rations:-4, hunger:0, guilt:1 },
+    };
+
+    // Step 3: run through engine (applyChoice → tickHunger → settleRound → advanceRound)
+    const result = runCycle(s, effects, config);
+
+    // Step 4: verify resource/body pressure change (hunger reduced)
+    assert.ok(
+      result.state.characters.xiao_mei.hunger < s.characters.xiao_mei.hunger,
+      "resource pressure: hunger changed",
+    );
+
+    // Step 5: verify relationship/risk pressure change
+    assert.ok(
+      result.state.characters.guard_wang.risk > s.characters.guard_wang.risk ||
+      result.state.characters.old_chen.relationship < s.characters.old_chen.relationship,
+      "relationship pressure: trust/risk changed",
+    );
+
+    // Step 6: day advanced
+    assert.ok(result.state.currentRound > s.currentRound, "day advanced");
+  });
+});
