@@ -164,14 +164,6 @@ export class WebGameController {
     const result = runCycle(this.state, effects, this.config);
     this.state = result.state;
 
-    // Reset player rations when round advances
-    if (this.state.currentPhaseId !== prevPhaseId && this.state.roundRations != null) {
-      this.state = {
-        ...this.state,
-        player: { ...this.state.player, rations: this.state.roundRations },
-      };
-    }
-
     const enriched = this._buildFeedback(feedback, effects, prevPhaseId);
     this.renderer.renderFeedback(enriched);
 

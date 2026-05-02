@@ -158,6 +158,7 @@ export function advanceRound(state, config) {
     currentPhaseId: phase.id,
     eventIndex: 0,
     roundRations: phase.rations_available,
+    player: { ...state.player, rations: phase.rations_available },
   };
 }
 
