@@ -79,7 +79,7 @@ const CSS = `
 export class UIRenderer {
   constructor(el) {
     this.el = el;
-    this.app = document.getElementById("app");
+    this.app = typeof document !== "undefined" ? document.getElementById("app") : null;
     this._alloc = {};       // charId → count
     this._drag = null;
     this._state = null;
@@ -415,8 +415,7 @@ export class UIRenderer {
   // ── Helpers ─────────────────────────────────
 
   _statusHTML(s, phaseName) {
-    const ph = phaseName || this._state?.currentPhaseId
-      ? (this._state?.currentPhaseId ? `第${this._state.currentPhaseId}轮` : "") : "";
+    const ph = phaseName || (this._state?.currentPhaseId ? `第${this._state.currentPhaseId}轮` : "");
     return `<span>Day ${s.currentRound}</span><span>${ph}</span>`
       + `<span>配给 ${s.player.rations}</span><span>饥饿 ${s.player.hunger}</span>`
       + `<span>负罪 ${s.player.guilt}</span>`
