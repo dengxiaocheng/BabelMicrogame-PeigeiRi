@@ -365,4 +365,55 @@ describe("Allocation-driven end-to-end core loop", () => {
     assert.equal(result.ending.id, "player_collapse");
     assert.equal(result.ending.type, "failure");
   });
+
+  it("starving old_chen triggers elder_starved failure", () => {
+    const starveElder = {
+      xiao_mei:{ hunger:-2, relationship:0, risk:0 },
+      old_chen:{ hunger:2, relationship:-1, risk:1 },
+      guard_wang:{ hunger:-2, relationship:0, risk:0 },
+      player:{ rations:-2, hunger:0, guilt:2 },
+    };
+    const result = runCycles(createInitialState(config, CH), starveElder, 3);
+    assert.ok(result.ending, "game ended");
+    assert.equal(result.ending.id, "elder_starved");
+    assert.equal(result.ending.type, "failure");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. State Coupling: both survival AND relationship pressure per cycle
+// ---------------------------------------------------------------------------
+describe("State Coupling – dual pressure per cycle", () => {
+  const config = cfg({rounds:{total:3,phases:[
+    {id:1,events_per_round:1,rations_available:8},
+    {id:2,events_per_round:1,rations_available:6},
+    {id:3,events_per_round:1,rations_available:4}]}});
+
+  it("every effective operation changes both survival and relationship state", () => {
+    const s = createInitialState(config, CH);
+    const effects = {
+      xiao_mei:{ hunger:-3, relationship:1, risk:0 },
+      old_chen:{ hunger:-2, relationship:-1, risk:0 },
+      guard_wang:{ hunger:0, relationship:-1, risk:1 },
+      player:{ rations:-3, hunger:0, guilt:1 },
+    };
+    const result = runCycle(s, effects, config);
+    const before = s, after = result.state;
+
+    // Survival pressure: hunger changed for at least one character
+    const hungerChanged = Object.keys(before.characters).some(
+      id => before.characters[id].hunger !== after.characters[id].hunger,
+    );
+    assert.ok(hungerChanged, "survival pressure: at least one character hunger changed");
+
+    // Relationship/risk pressure: trust or risk changed for at least one character
+    const relChanged = Object.keys(before.characters).some(
+      id => before.characters[id].relationship !== after.characters[id].relationship
+        || before.characters[id].risk !== after.characters[id].risk,
+    );
+    assert.ok(relChanged, "relationship pressure: trust or risk changed");
+
+    // Player resource also changed
+    assert.notEqual(after.player.rations, before.player.rations, "player rations changed");
+  });
 });
