@@ -345,7 +345,7 @@ export class UIRenderer {
     const btn = document.getElementById("btn-confirm");
     if (btn) {
       const receivers = Object.values(this._alloc).filter(v => v > 0).length;
-      btn.disabled = total === 0 || receivers < 2;
+      btn.disabled = (total === 0 && this._state.player.rations > 0) || (total > 0 && receivers < 2);
     }
   }
 
@@ -389,9 +389,9 @@ export class UIRenderer {
 
   _confirm() {
     const total = this._totalAlloc();
-    if (total === 0) return;
+    if (total === 0 && this._state.player.rations > 0) return;
     const receivers = Object.values(this._alloc).filter(v => v > 0).length;
-    if (receivers < 2) return;
+    if (total > 0 && receivers < 2) return;
 
     const effects = this._calcEffects();
     const feedback = this._makeFeedback();
@@ -409,6 +409,19 @@ export class UIRenderer {
     const left = CHAR_ORDER.filter(id => !(this._alloc[id] > 0)).map(id => CHARS[id]?.name).filter(Boolean);
     if (left.length && this._totalAlloc() > 0) parts.push(`${left.join("、")}的碗里空空的。没有人说话。`);
     parts.push(`你一共分出了 ${this._totalAlloc()} 份口粮。`);
+
+    const fx = this._calcEffects();
+    const deltas = [];
+    for (const [id, ef] of Object.entries(fx)) {
+      if (id === "player" || id === "meta") continue;
+      const tags = [];
+      if (ef.hunger) tags.push(`饥饿${ef.hunger > 0 ? "+" : ""}${ef.hunger}`);
+      if (ef.relationship) tags.push(`信任${ef.relationship > 0 ? "+" : ""}${ef.relationship}`);
+      if (ef.risk) tags.push(`风险+${ef.risk}`);
+      if (tags.length) deltas.push(`${CHARS[id]?.name || id}: ${tags.join(" ")}`);
+    }
+    if (deltas.length) parts.push(`<br><span style="color:#888;font-size:.85rem">【${deltas.join(" | ")}】</span>`);
+
     return parts.join("");
   }
 

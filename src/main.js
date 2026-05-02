@@ -1,5 +1,4 @@
-import readline from "node:readline";
-import { pathToFileURL } from "node:url";
+// Node-only imports moved to dynamic import (allows browser usage)
 import {
   createInitialState,
   initGame,
@@ -69,6 +68,7 @@ export class RationDayGame {
 }
 
 async function main() {
+  const { default: readline } = await import("node:readline");
   const game = new RationDayGame();
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const ask = (q) => new Promise((resolve) => rl.question(q, resolve));
@@ -114,11 +114,14 @@ async function main() {
   rl.close();
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((err) => {
-    console.error("Fatal:", err);
-    process.exit(1);
-  });
+// Auto-run in Node CLI only
+if (typeof process !== "undefined" && process.argv?.[1]) {
+  try {
+    const { pathToFileURL } = await import("node:url");
+    if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+      main().catch((err) => { console.error("Fatal:", err); process.exit(1); });
+    }
+  } catch { /* browser or non-CLI context */ }
 }
 
 // ── Web Game Controller ──────────────────────────
@@ -163,6 +166,8 @@ export class WebGameController {
     const prevPhaseId = this.state.currentPhaseId;
     const result = runCycle(this.state, effects, this.config);
     this.state = result.state;
+    this.renderer._state = this.state;
+    this.renderer.renderStatus(this.state);
 
     const enriched = this._buildFeedback(feedback, effects, prevPhaseId);
     this.renderer.renderFeedback(enriched);
@@ -199,17 +204,6 @@ export class WebGameController {
 
   _buildFeedback(baseFeedback, effects, prevPhaseId) {
     const parts = [baseFeedback];
-
-    const charFx = [];
-    for (const [id, ef] of Object.entries(effects)) {
-      if (id === "player" || id === "meta" || !ef) continue;
-      const tags = [];
-      if (ef.hunger) tags.push(`饥饿${ef.hunger > 0 ? "+" : ""}${ef.hunger}`);
-      if (ef.relationship) tags.push(`信任${ef.relationship > 0 ? "+" : ""}${ef.relationship}`);
-      if (ef.risk) tags.push(`风险+${ef.risk}`);
-      if (tags.length) charFx.push(`${this._charName(id)}: ${tags.join(" · ")}`);
-    }
-    if (charFx.length) parts.push(charFx.join(" | "));
 
     if (this.state.currentPhaseId !== prevPhaseId) {
       const phase = this.config.rounds.phases.find(p => p.id === this.state.currentPhaseId);
