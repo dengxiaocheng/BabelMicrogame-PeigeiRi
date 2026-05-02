@@ -308,3 +308,61 @@ describe("Acceptance Playthrough – core loop", () => {
     assert.ok(result.state.currentRound > s.currentRound, "day advanced");
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Allocation-driven end-to-end core loop (success + failure endings)
+// ---------------------------------------------------------------------------
+describe("Allocation-driven end-to-end core loop", () => {
+  // events_per_round:1 so every runCycle triggers settle + advance
+  const config = cfg({rounds:{total:3,phases:[
+    {id:1,events_per_round:1,rations_available:8},
+    {id:2,events_per_round:1,rations_available:6},
+    {id:3,events_per_round:1,rations_available:4}]}});
+
+  function runCycles(state, effects, n) {
+    let cur = { state, ending: null };
+    for (let i = 0; i < n && !cur.ending; i++) {
+      cur = runCycle(cur.state, effects, config);
+    }
+    return cur;
+  }
+
+  it("balanced allocation reaches stable success over 3 rounds", () => {
+    const balanced = {
+      xiao_mei:{ hunger:-3, relationship:0, risk:0 },
+      old_chen:{ hunger:-3, relationship:0, risk:0 },
+      guard_wang:{ hunger:-2, relationship:0, risk:0 },
+      player:{ rations:-3, hunger:0, guilt:0 },
+    };
+    const result = runCycles(createInitialState(config, CH), balanced, 3);
+    assert.ok(result.ending, "game ended");
+    assert.equal(result.ending.id, "stable");
+    assert.equal(result.ending.type, "success");
+  });
+
+  it("repeatedly skipping guard triggers guard_revolt failure", () => {
+    const skipGuard = {
+      xiao_mei:{ hunger:-2, relationship:0, risk:0 },
+      old_chen:{ hunger:-2, relationship:0, risk:0 },
+      guard_wang:{ hunger:0, relationship:-1, risk:3 },
+      player:{ rations:-2, hunger:0, guilt:1 },
+    };
+    const result = runCycles(createInitialState(config, CH), skipGuard, 3);
+    assert.ok(result.ending, "game ended");
+    assert.equal(result.ending.id, "guard_revolt");
+    assert.equal(result.ending.type, "failure");
+  });
+
+  it("guilt accumulation triggers player_collapse failure", () => {
+    const guilty = {
+      xiao_mei:{ hunger:-2, relationship:0, risk:0 },
+      old_chen:{ hunger:-2, relationship:0, risk:0 },
+      guard_wang:{ hunger:0, relationship:-1, risk:1 },
+      player:{ rations:-2, hunger:0, guilt:4 },
+    };
+    const result = runCycles(createInitialState(config, CH), guilty, 3);
+    assert.ok(result.ending, "game ended");
+    assert.equal(result.ending.id, "player_collapse");
+    assert.equal(result.ending.type, "failure");
+  });
+});
